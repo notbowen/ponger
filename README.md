@@ -10,3 +10,4 @@ Discord bot that announces CTFs (currently) and creates roles & channels (planne
 - [ ] Create roles & channels
 - [ ] Add reaction roles
 - [ ] Add polls to choose CTFs
+- [ ] Create a seperate testing bot
