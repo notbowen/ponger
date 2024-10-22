@@ -15,3 +15,5 @@ tokio = "1.26.0"
 chrono = "0.4.38"
 serde = "1.0.211"
 reqwest = { version = "0.12.8", features = ["json"] }
+rand = "0.8.5"
+hex = "0.4.3"
