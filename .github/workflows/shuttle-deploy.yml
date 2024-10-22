@@ -10,8 +10,9 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: shuttle-hq/deploy-action@main
+      - uses: shuttle-hq/deploy-action@v2
         with:
-          deploy-key: ${{ secrets.SHUTTLE_API_KEY }}
+          shuttle-api-key: ${{ secrets.SHUTTLE_API_KEY }}
+          project-id: proj_01JASXZ9J78D438TSCKFBSJMEG
           secrets: |
             DISCORD_TOKEN = '${{ secrets.DISCORD_TOKEN }}'
