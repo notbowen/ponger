@@ -4,7 +4,7 @@ Discord bot that announces CTFs (currently) and creates roles & channels (planne
 
 ## Todo
 
-- [ ] Add a CI/CD pipeline
+- [x] Add a CI/CD pipeline
 - [ ] Clean up the damn code
 - [ ] Add proper error handling 💀
 - [ ] Create roles & channels
