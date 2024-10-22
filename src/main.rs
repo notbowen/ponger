@@ -1,15 +1,16 @@
-extern crate dotenv;
-
+use anyhow::Context as _;
 use chrono::{self, DateTime};
-use dotenv::dotenv;
 use poise::serenity_prelude as serenity;
 use poise::serenity_prelude::CreateMessage;
+use poise::serenity_prelude::{ClientBuilder, GatewayIntents};
 use poise::Modal;
 use serde::Deserialize;
+use shuttle_runtime::SecretStore;
+use shuttle_serenity::ShuttleSerenity;
 
 struct Data {}
 type Error = Box<dyn std::error::Error + Send + Sync>;
-// type Context<'a> = poise::Context<'a, Data, Error>;
+type Context<'a> = poise::Context<'a, Data, Error>;
 
 #[derive(Debug, Modal)]
 #[name = "CTF Details"]
@@ -111,12 +112,11 @@ async fn send_ctf_details(
     Ok(())
 }
 
-#[tokio::main]
-async fn main() {
-    dotenv().ok();
-
-    let token = std::env::var("DISCORD_TOKEN").expect("Missing DISCORD_TOKEN");
-    let intents = serenity::GatewayIntents::non_privileged();
+#[shuttle_runtime::main]
+async fn main(#[shuttle_runtime::Secrets] secret_store: SecretStore) -> ShuttleSerenity {
+    let discord_token = secret_store
+        .get("DISCORD_TOKEN")
+        .context("'DISCORD_TOKEN' was not found")?;
 
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
@@ -131,8 +131,10 @@ async fn main() {
         })
         .build();
 
-    let client = serenity::ClientBuilder::new(token, intents)
+    let client = ClientBuilder::new(discord_token, GatewayIntents::non_privileged())
         .framework(framework)
-        .await;
-    client.unwrap().start().await.unwrap();
+        .await
+        .map_err(shuttle_runtime::CustomError::new)?;
+
+    Ok(client.into())
 }
