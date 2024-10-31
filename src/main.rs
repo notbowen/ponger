@@ -1,29 +1,42 @@
-use anyhow::Context as _;
 use poise::serenity_prelude::{ClientBuilder, GatewayIntents};
-use shuttle_runtime::SecretStore;
-use shuttle_serenity::ShuttleSerenity;
-use sqlx::PgPool;
-
+use sqlx::postgres::PgPoolOptions;
 use types::global::Data;
 
 mod commands;
 mod types;
 mod utils;
 
-#[shuttle_runtime::main]
-async fn main(
-    #[shuttle_runtime::Secrets] secret_store: SecretStore,
-    #[shuttle_shared_db::Postgres] pool: PgPool,
-) -> ShuttleSerenity {
-    let discord_token = secret_store
-        .get("DISCORD_TOKEN")
-        .context("'DISCORD_TOKEN' was not found")?;
+#[tokio::main]
+async fn main() {
+    // Load .env variables
+    if cfg!(debug_assertions) {
+        dotenvy::dotenv().expect("Unable to load .env file");
+    }
 
+    let discord_token =
+        std::env::var("DISCORD_TOKEN").expect("Unable to find environment variable DISCORD_TOKEN");
+
+    let conn_string;
+    if cfg!(not(debug_assertions)) {
+        conn_string = std::env::var("CONN_STRING").unwrap();
+    } else {
+        conn_string = std::env::var("PROD_CONN_STRING").unwrap();
+    }
+
+    // Create Postgres pool
+    let pool = PgPoolOptions::new()
+        .max_connections(5)
+        .connect(&conn_string)
+        .await
+        .unwrap();
+
+    // Run SQL migrations
     sqlx::migrate!()
         .run(&pool)
         .await
         .expect("Unable to run migrations!");
 
+    // Initialise bot
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
             commands: vec![
@@ -42,8 +55,7 @@ async fn main(
 
     let client = ClientBuilder::new(discord_token, GatewayIntents::non_privileged())
         .framework(framework)
-        .await
-        .map_err(shuttle_runtime::CustomError::new)?;
+        .await;
 
-    Ok(client.into())
+    client.unwrap().start().await.unwrap();
 }

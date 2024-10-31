@@ -38,9 +38,12 @@ pub async fn send_ctf(
 
     let response = match fetch(url).await {
         Ok(res) => res,
-        Err(_) => {
-            ctx.say(":x: **Something went wrong!**\nAre you sure the provided URL was valid?")
-                .await?;
+        Err(e) => {
+            ctx.say(format!(
+                ":x: **Something went wrong!**\nAre you sure the provided URL was valid?\nLog: {}",
+                e
+            ))
+            .await?;
             return Ok(());
         }
     };
