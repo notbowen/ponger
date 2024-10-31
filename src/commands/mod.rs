@@ -1,1 +1,2 @@
-pub mod post_ctf;
+pub mod configs;
+pub mod ctfs;
