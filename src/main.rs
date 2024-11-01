@@ -1,7 +1,9 @@
+use poise::serenity_prelude as serenity;
 use poise::serenity_prelude::{ClientBuilder, GatewayIntents};
 use sqlx::postgres::PgPoolOptions;
-use types::global::Data;
+use types::global::{Data, Error};
 
+mod callbacks;
 mod commands;
 mod types;
 mod utils;
@@ -43,6 +45,9 @@ async fn main() {
                 commands::ctfs::send_ctf(),
                 commands::configs::set_announcement_channel(),
             ],
+            event_handler: |ctx, event, framework, data| {
+                Box::pin(event_handler(ctx, event, framework, data))
+            },
             ..Default::default()
         })
         .setup(|ctx, _ready, framework| {
@@ -58,4 +63,22 @@ async fn main() {
         .await;
 
     client.unwrap().start().await.unwrap();
+}
+
+async fn event_handler(
+    ctx: &serenity::Context,
+    event: &serenity::FullEvent,
+    _framework: poise::FrameworkContext<'_, Data, Error>,
+    data: &Data,
+) -> Result<(), Error> {
+    match event {
+        serenity::FullEvent::Ready { data_about_bot, .. } => {
+            println!("Logged in as {}", data_about_bot.user.name);
+        }
+        serenity::FullEvent::ReactionAdd { add_reaction } => {
+            callbacks::reaction::reaction_add_role(ctx, add_reaction, data).await?;
+        }
+        _ => {}
+    }
+    Ok(())
 }

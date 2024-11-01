@@ -7,7 +7,7 @@ use crate::{
     },
     utils::{color::random_color, ctf_fetcher::fetch},
 };
-use poise::serenity_prelude::{self as serenity, ChannelId};
+use poise::serenity_prelude::{self as serenity, ChannelId, EditRole};
 
 #[poise::command(slash_command)]
 pub async fn send_ctf(
@@ -49,7 +49,7 @@ pub async fn send_ctf(
     };
 
     let embed = serenity::CreateEmbed::default()
-        .title(response.title)
+        .title(&response.title)
         .description(format!(
             // TODO: Add a calendar link
             "**Start**: {}\n**End**: {}\n\n**URL**: {}\n\n**Description**:\n{}",
@@ -66,10 +66,41 @@ pub async fn send_ctf(
         .url(response.ctftime_url)
         .color(random_color());
 
-    channel_id
+    let message = channel_id
         .send_message(&ctx.http(), serenity::CreateMessage::new().embed(embed))
         .await?;
 
     ctx.say(":white_check_mark: Sent!").await?;
+
+    let role_name = response.title.replace(" ", "-").to_lowercase();
+    let role = server_id
+        .create_role(
+            &ctx.http(),
+            EditRole::new()
+                .name(role_name)
+                .mentionable(true)
+                .colour(random_color()),
+        )
+        .await?;
+
+    match sqlx::query("INSERT INTO reactions VALUES ($1, $2)")
+        .bind(message.id.to_string())
+        .bind(role.id.to_string())
+        .fetch_optional(&ctx.data().pool)
+        .await
+    {
+        Ok(_) => {
+            ctx.say(format!(
+                ":white_check_mark: Created role <@&{}>!",
+                role.id.to_string()
+            ))
+            .await?;
+        }
+        Err(e) => {
+            ctx.say(format!(":x: **Something went wrong!**\nLog: {}", e))
+                .await?;
+        }
+    };
+
     Ok(())
 }
