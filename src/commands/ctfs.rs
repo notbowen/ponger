@@ -110,7 +110,7 @@ pub async fn send(
             ctx.http(),
             serenity::EditMessage::new()
                 .content(format!(
-                    ":redflag: New CTF Alert! :redflag:\nReact to this message to obtain the <@&{}> role!\n",
+                    ":triangular_flag_on_post: New CTF Alert! :triangular_flag_on_post:\nReact to this message to obtain the <@&{}> role!\n",
                     role.id.to_string()
                 ))
                 .embed(embed),
