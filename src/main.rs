@@ -78,6 +78,9 @@ async fn event_handler(
         serenity::FullEvent::ReactionAdd { add_reaction } => {
             callbacks::reaction::reaction_add_role(ctx, add_reaction, data).await?;
         }
+        serenity::FullEvent::ReactionRemove { removed_reaction } => {
+            callbacks::reaction::reaction_remove_role(ctx, removed_reaction, data).await?;
+        }
         _ => {}
     }
     Ok(())
