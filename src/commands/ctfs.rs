@@ -10,7 +10,7 @@ use crate::{
 use poise::serenity_prelude::{self as serenity, ChannelId, EditRole};
 
 #[poise::command(slash_command)]
-pub async fn send_ctf(
+pub async fn send(
     ctx: poise::ApplicationContext<'_, Data, Error>,
     #[description = "CTFTime URL"] url: String,
 ) -> Result<(), Error> {

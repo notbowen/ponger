@@ -5,7 +5,7 @@ use crate::types::{
 use poise::serenity_prelude as serenity;
 
 #[poise::command(slash_command)]
-pub async fn set_announcement_channel(
+pub async fn setchannel(
     ctx: poise::ApplicationContext<'_, Data, Error>,
     #[description = "Channel"] channel_id: serenity::ChannelId,
 ) -> Result<(), Error> {
