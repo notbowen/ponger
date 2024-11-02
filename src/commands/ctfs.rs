@@ -66,8 +66,11 @@ pub async fn send_ctf(
         .url(response.ctftime_url)
         .color(random_color());
 
-    let message = channel_id
-        .send_message(&ctx.http(), serenity::CreateMessage::new().embed(embed))
+    let mut message = channel_id
+        .send_message(
+            &ctx.http(),
+            serenity::CreateMessage::new().embed(embed.clone()),
+        )
         .await?;
 
     ctx.say(":white_check_mark: Sent!").await?;
@@ -101,6 +104,18 @@ pub async fn send_ctf(
                 .await?;
         }
     };
+
+    message
+        .edit(
+            ctx.http(),
+            serenity::EditMessage::new()
+                .content(format!(
+                    ":redflag: New CTF Alert! :redflag:\nReact to this message to obtain the <@&{}> role!\n",
+                    role.id.to_string()
+                ))
+                .embed(embed),
+        )
+        .await?;
 
     Ok(())
 }
