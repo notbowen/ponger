@@ -4,6 +4,8 @@ use chrono::DateTime;
 
 pub async fn fetch(url: String) -> Result<CtfEmbedContent> {
     let id = url
+        .trim()
+        .trim_end_matches('/')
         .split("/")
         .last()
         .ok_or(anyhow::anyhow!("Invalid URL"))?;
