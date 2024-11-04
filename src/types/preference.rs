@@ -1,7 +1,3 @@
-use poise::{
-    serenity_prelude::{Channel, ChannelId, GuildChannel},
-    Modal,
-};
 use serde::{Deserialize, Serialize};
 use sqlx::prelude::FromRow;
 

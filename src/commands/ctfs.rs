@@ -7,7 +7,7 @@ use crate::{
     },
     utils::{color::random_color, ctf_fetcher::fetch},
 };
-use poise::serenity_prelude::{self as serenity, ChannelId, EditRole, GuildId, ReactionType};
+use poise::serenity_prelude::{self as serenity, ChannelId, EditRole, ReactionType};
 
 #[poise::command(slash_command)]
 pub async fn send(
