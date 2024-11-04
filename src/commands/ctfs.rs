@@ -3,14 +3,14 @@ use std::str::FromStr;
 use crate::{
     types::{
         global::{Data, Error},
-        preference::AnnouncementPrefs,
+        preference::Preferences,
     },
     utils::{color::random_color, ctf_fetcher::fetch},
 };
-use poise::serenity_prelude::{self as serenity, ChannelId, EditRole};
+use poise::serenity_prelude::{self as serenity, ChannelId, EditRole, ReactionType};
 
 #[poise::command(slash_command)]
-pub async fn send_ctf(
+pub async fn send(
     ctx: poise::ApplicationContext<'_, Data, Error>,
     #[description = "CTFTime URL"] url: String,
 ) -> Result<(), Error> {
@@ -22,19 +22,22 @@ pub async fn send_ctf(
         }
     };
 
-    let channel_id =
-        match sqlx::query_as::<_, AnnouncementPrefs>("SELECT * FROM prefs WHERE server_id = $1")
+    let preferences =
+        match sqlx::query_as::<_, Preferences>("SELECT * FROM prefs WHERE server_id = $1")
             .bind(&server_id.to_string())
             .fetch_one(&ctx.data().pool)
             .await
         {
-            Ok(p) => ChannelId::from_str(&p.channel_id)?,
+            Ok(p) => p,
             Err(e) => {
                 ctx.say(format!(":x: **Something went wrong!**\nLog: {}", e))
                     .await?;
                 return Ok(());
             }
         };
+
+    let channel_id = ChannelId::from_str(&preferences.channel_id)?;
+    let category_id = ChannelId::from_str(&preferences.category_id)?;
 
     let response = match fetch(url).await {
         Ok(res) => res,
@@ -66,8 +69,11 @@ pub async fn send_ctf(
         .url(response.ctftime_url)
         .color(random_color());
 
-    let message = channel_id
-        .send_message(&ctx.http(), serenity::CreateMessage::new().embed(embed))
+    let mut message = channel_id
+        .send_message(
+            &ctx.http(),
+            serenity::CreateMessage::new().embed(embed.clone()),
+        )
         .await?;
 
     ctx.say(":white_check_mark: Sent!").await?;
@@ -77,7 +83,7 @@ pub async fn send_ctf(
         .create_role(
             &ctx.http(),
             EditRole::new()
-                .name(role_name)
+                .name(&role_name)
                 .mentionable(true)
                 .colour(random_color()),
         )
@@ -101,6 +107,43 @@ pub async fn send_ctf(
                 .await?;
         }
     };
+
+    message
+        .edit(
+            ctx.http(),
+            serenity::EditMessage::new()
+                .content(format!(
+                    ":triangular_flag_on_post: New CTF Alert! :triangular_flag_on_post:\nReact to this message to obtain the <@&{}> role!\n",
+                    role.id.to_string()
+                ))
+                .embed(embed),
+        )
+        .await?;
+
+    message
+        .react(&ctx.http(), ReactionType::Unicode("🔥".to_string()))
+        .await?;
+
+    server_id
+        .create_channel(
+            &ctx.http(),
+            serenity::CreateChannel::new(&role_name)
+                .kind(serenity::ChannelType::Text)
+                .category(category_id)
+                .permissions(vec![
+                    serenity::PermissionOverwrite {
+                        allow: serenity::Permissions::empty(),
+                        deny: serenity::Permissions::VIEW_CHANNEL,
+                        kind: serenity::PermissionOverwriteType::Role(server_id.everyone_role()),
+                    },
+                    serenity::PermissionOverwrite {
+                        allow: serenity::Permissions::VIEW_CHANNEL,
+                        deny: serenity::Permissions::empty(),
+                        kind: serenity::PermissionOverwriteType::Role(role.id),
+                    },
+                ]),
+        )
+        .await?;
 
     Ok(())
 }

@@ -41,10 +41,7 @@ async fn main() {
     // Initialise bot
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
-            commands: vec![
-                commands::ctfs::send_ctf(),
-                commands::configs::set_announcement_channel(),
-            ],
+            commands: vec![commands::ctfs::send(), commands::configs::configserver()],
             event_handler: |ctx, event, framework, data| {
                 Box::pin(event_handler(ctx, event, framework, data))
             },
@@ -77,6 +74,9 @@ async fn event_handler(
         }
         serenity::FullEvent::ReactionAdd { add_reaction } => {
             callbacks::reaction::reaction_add_role(ctx, add_reaction, data).await?;
+        }
+        serenity::FullEvent::ReactionRemove { removed_reaction } => {
+            callbacks::reaction::reaction_remove_role(ctx, removed_reaction, data).await?;
         }
         _ => {}
     }

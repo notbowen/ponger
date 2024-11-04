@@ -2,7 +2,8 @@ use serde::{Deserialize, Serialize};
 use sqlx::prelude::FromRow;
 
 #[derive(Serialize, Deserialize, FromRow)]
-pub struct AnnouncementPrefs {
+pub struct Preferences {
     pub server_id: String,
     pub channel_id: String,
+    pub category_id: String,
 }
