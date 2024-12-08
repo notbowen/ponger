@@ -7,8 +7,8 @@ use poise::serenity_prelude::{Channel, ChannelId};
 #[poise::command(slash_command)]
 pub async fn configserver(
     ctx: poise::ApplicationContext<'_, Data, Error>,
-    channel_id: ChannelId,
-    category_id: Channel,
+    #[channel_types("Text")] channel_id: ChannelId,
+    #[channel_types("Category")] category_id: Channel,
 ) -> Result<(), Error> {
     let server_id = match ctx.guild_id() {
         Some(id) => id,
