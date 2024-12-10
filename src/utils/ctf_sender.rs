@@ -9,6 +9,8 @@ use crate::{
 };
 use poise::serenity_prelude::{self as serenity, ChannelId, EditRole, ReactionType};
 
+use super::preference;
+
 pub async fn send_ctf(
     ctx: poise::ApplicationContext<'_, Data, Error>,
     url: String,
@@ -21,19 +23,7 @@ pub async fn send_ctf(
         }
     };
 
-    let preferences =
-        match sqlx::query_as::<_, Preferences>("SELECT * FROM prefs WHERE server_id = $1")
-            .bind(&server_id.to_string())
-            .fetch_one(&ctx.data().pool)
-            .await
-        {
-            Ok(p) => p,
-            Err(e) => {
-                ctx.say(format!(":x: **Something went wrong!**\nLog: {}", e))
-                    .await?;
-                return Ok(());
-            }
-        };
+    let preferences = preference::get(&ctx.data.pool, server_id.to_string()).await?;
 
     let channel_id = ChannelId::from_str(&preferences.channel_id)?;
     let category_id = ChannelId::from_str(&preferences.category_id)?;
