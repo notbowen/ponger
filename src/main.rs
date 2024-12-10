@@ -38,10 +38,16 @@ async fn main() {
         .await
         .expect("Unable to run migrations!");
 
+    // TODO: Schedule polls with helper function
+
     // Initialise bot
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
-            commands: vec![commands::ctfs::send(), commands::configs::configserver()],
+            commands: vec![
+                commands::ctfs::send(),
+                commands::ctfs::poll(),
+                commands::configs::configserver(),
+            ],
             event_handler: |ctx, event, framework, data| {
                 Box::pin(event_handler(ctx, event, framework, data))
             },
