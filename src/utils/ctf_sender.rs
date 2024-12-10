@@ -1,10 +1,7 @@
 use std::str::FromStr;
 
 use crate::{
-    types::{
-        global::{Data, Error},
-        preference::Preferences,
-    },
+    types::global::{Data, Error},
     utils::{color::random_color, ctf_fetcher::fetch},
 };
 use poise::serenity_prelude::{self as serenity, ChannelId, EditRole, ReactionType};
